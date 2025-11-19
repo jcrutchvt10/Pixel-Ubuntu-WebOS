@@ -1,0 +1,26 @@
+{
+  "name": "Ubuntu 24.04 Pixel Edition",
+  "short_name": "Ubuntu",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#1D1D1D",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "https://assets.ubuntu.com/v1/29985a98-ubuntu-logo-32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "https://assets.ubuntu.com/v1/29985a98-ubuntu-logo-32.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://assets.ubuntu.com/v1/29985a98-ubuntu-logo-32.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -64,10 +64,12 @@ export const initGisClient = async (config: DriveConfig): Promise<void> => {
           if (resp.error) {
             if (resp.error === 'popup_closed_by_user' || resp.error === 'access_denied') {
                 console.warn("User cancelled login or denied access.");
+                window.dispatchEvent(new Event('drive-auth-cancelled'));
                 return; // Graceful exit, do not alert
             }
             console.error("OAuth Error", resp);
-            alert(`Google Auth Error: ${resp.error}\n\nIf you see 'secure app' error, it means this sandbox environment is blocked by Google Policy. We will fallback to Local Simulation.`);
+            // Dispatch error event for UI handling instead of alert
+            window.dispatchEvent(new Event('drive-auth-error'));
             return;
           }
           
@@ -80,9 +82,10 @@ export const initGisClient = async (config: DriveConfig): Promise<void> => {
           window.dispatchEvent(new Event('drive-auth-changed'));
         },
         error_callback: (err: any) => {
-           // This callback is for initialization errors, not user actions
-           console.error("GIS Initialization Error", err);
-           // Don't reject explicitly here as it might break the flow for non-fatal errors, just log.
+           // This callback is for initialization errors (e.g. invalid client_id origin)
+           // We log it but don't crash the app, allowing fallback to occur in UI
+           console.warn("GIS Initialization Warning (likely origin mismatch):", err);
+           window.dispatchEvent(new Event('drive-auth-error'));
         }
       });
       gisInited = true;
@@ -96,7 +99,7 @@ export const initGisClient = async (config: DriveConfig): Promise<void> => {
 export const requestAuth = () => {
   if (!tokenClient) {
       console.error("Token Client not initialized. Call initGisClient first.");
-      alert("System Error: Google Identity Service not initialized.");
+      window.dispatchEvent(new Event('drive-auth-error'));
       return;
   }
   // Request access token.
@@ -105,7 +108,7 @@ export const requestAuth = () => {
     tokenClient.requestAccessToken({ prompt: 'consent' });
   } catch (e) {
     console.error("Request Auth Failed", e);
-    alert("Failed to open Google Sign-In popup. Please allow popups for this site.");
+    window.dispatchEvent(new Event('drive-auth-error'));
   }
 };
 

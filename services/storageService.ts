@@ -1,3 +1,4 @@
+
 import { AppId } from '../types';
 import * as drive from './googleDrive';
 import * as fs from './fileSystem';
@@ -33,6 +34,11 @@ export const ALL_PACKAGES: Package[] = [
   { id: '11', name: 'code', version: '1.87.0', description: 'Code editing. Redefined.', section: 'Development', size: '350 MB', appId: AppId.VSCODE },
   { id: '12', name: 'python3', version: '3.12.0', description: 'Interactive high-level object-oriented language', section: 'Development', size: '55 MB' },
   { id: '13', name: 'spotify-client', version: '1.2.10', description: 'Music for everyone', section: 'Multimedia', size: '180 MB', appId: AppId.SPOTIFY },
+  // GCC Toolchain
+  { id: '14', name: 'gcc', version: '4:13.2.0-1ubuntu1', description: 'GNU C compiler', section: 'Development', size: '55 MB' },
+  { id: '15', name: 'g++', version: '4:13.2.0-1ubuntu1', description: 'GNU C++ compiler', section: 'Development', size: '65 MB' },
+  { id: '16', name: 'make', version: '4.3-4.1build1', description: 'Utility for directing compilation', section: 'Development', size: '1.2 MB' },
+  { id: '17', name: 'libc6-dev', version: '2.39-0ubuntu8', description: 'GNU C Library: Development Libraries and Header Files', section: 'Development', size: '15 MB' },
 ];
 
 // Core packages that are always installed
