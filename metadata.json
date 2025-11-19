@@ -1,0 +1,7 @@
+{
+  "name": "Pixel Ubuntu WebOS",
+  "description": "A high-fidelity Ubuntu desktop simulation with a Gemini-powered terminal assistant to guide you through Linux on Android concepts.",
+  "requestFramePermissions": [
+    "usb"
+  ]
+}
