@@ -52,6 +52,59 @@ const TerminalApp: React.FC = () => {
       }
   }, [mode]);
 
+  const handleNeofetch = () => {
+      const logo = `
+            .-/+oossssoo+/-.
+        \`:+ssssssssssssssssss+:\`
+      -+ssssssssssssssssssyyssss+-
+    .ossssssssssssssssssdMMMNysssso.
+   /ssssssssssshdmmNNmmyNMMMMhssssss/
+  +ssssssssshmydMMMMMMMNddddyssssssss+
+ /sssssssshNMMMyhhyyyyhmNMMMNhssssssss/
+.ssssssssdMMMNhsssssssssshNMMMdssssssss.
++sssshhhyNMMNyssssssssssssyNMMMysssssss+
+ossyNMMMNyMMhsssssssssssssshmmmhssssssso
+ossyNMMMNyMMhsssssssssssssshmmmhssssssso
++sssshhhyNMMNyssssssssssssyNMMMysssssss+
+.ssssssssdMMMNhsssssssssshNMMMdssssssss.
+ /sssssssshNMMMyhhyyyyhdNMMMNhssssssss/
+  +sssssssssdmydMMMMMMMMddddyssssssss+
+   /ssssssssssshdmNNNNmyNMMMMhssssss/
+    .ossssssssssssssssssdMMMNysssso.
+      -+sssssssssssssssssyyyssss+-
+        \`:+ssssssssssssssssss+:\`
+            .-/+oossssoo+/-.
+`;
+      const info = [
+          `\x1b[1;31mpixel@ubuntu\x1b[0m`,
+          `-------------`,
+          `\x1b[1;33mOS\x1b[0m: Ubuntu 24.04.1 LTS aarch64`,
+          `\x1b[1;33mHost\x1b[0m: Google Pixel 9 Pro XL`,
+          `\x1b[1;33mKernel\x1b[0m: 6.1.95-android16-16k`,
+          `\x1b[1;33mUptime\x1b[0m: 42 mins`,
+          `\x1b[1;33mPackages\x1b[0m: 12 (dpkg)`,
+          `\x1b[1;33mShell\x1b[0m: bash 5.2.21`,
+          `\x1b[1;33mResolution\x1b[0m: 1344x2992`,
+          `\x1b[1;33mDE\x1b[0m: GNOME 46.0`,
+          `\x1b[1;33mWM\x1b[0m: Mutter`,
+          `\x1b[1;33mTerminal\x1b[0m: gnome-terminal`,
+          `\x1b[1;33mCPU\x1b[0m: Google Tensor G4 (8) @ 3.10GHz`,
+          `\x1b[1;33mGPU\x1b[0m: Mali-G715-Immortalis MC7`,
+          `\x1b[1;33mMemory\x1b[0m: 2450MiB / 15890MiB`,
+      ];
+      
+      // Simple side-by-side render
+      const lines = logo.split('\n');
+      let combined = "";
+      for(let i=0; i<Math.max(lines.length, info.length + 5); i++) {
+          const l = lines[i] || "                                        ";
+          const r = info[i - 5] || "";
+          combined += l + "   " + r + "\n";
+      }
+      
+      setHistory(prev => [...prev, { type: 'system', content: combined }]);
+  };
+
   const handleFSCommand = async (cmd: string) => {
       const parts = cmd.trim().split(' ');
       const command = parts[0];
@@ -135,7 +188,6 @@ const TerminalApp: React.FC = () => {
       setHistory(prev => [...prev, { type: 'user', content: cmd }]);
       
       if (mode === TerminalMode.EMULATOR) {
-          // Pass to emulator (Mocked)
           setHistory(prev => [...prev, { type: 'kernel', content: `sh: ${cmd}: command not found` }]);
           return;
       }
@@ -146,6 +198,12 @@ const TerminalApp: React.FC = () => {
         setHistory([]);
         setIsLoading(false);
         return;
+      }
+
+      if (cmd === 'neofetch') {
+          handleNeofetch();
+          setIsLoading(false);
+          return;
       }
 
       if (cmd === 'boot_linux') {

@@ -13,9 +13,12 @@ export interface DriveFile {
   parents?: string[];
 }
 
+const STORAGE_KEY_TOKEN = 'ubuntu_web_drive_token';
+
 let tokenClient: any;
 let gisInited = false;
-let accessToken: string | null = null;
+// Restore token from storage if available
+let accessToken: string | null = localStorage.getItem(STORAGE_KEY_TOKEN);
 
 // The name of the root folder in Google Drive where we store everything
 const OS_ROOT_FOLDER_NAME = 'Ubuntu_Web_OS_Data';
@@ -46,6 +49,8 @@ const waitForScript = (globalVar: string) => {
 // --- AUTHENTICATION ---
 
 export const initGisClient = async (config: DriveConfig): Promise<void> => {
+  if (gisInited) return; // Idempotent
+
   await waitForScript('google');
   
   if (!(window as any).google) throw new Error("Google Identity Services Script not loaded.");
@@ -56,18 +61,28 @@ export const initGisClient = async (config: DriveConfig): Promise<void> => {
         client_id: config.clientId,
         scope: SCOPES,
         callback: (resp: any) => {
-          if (resp.error !== undefined) {
+          if (resp.error) {
+            if (resp.error === 'popup_closed_by_user' || resp.error === 'access_denied') {
+                console.warn("User cancelled login or denied access.");
+                return; // Graceful exit, do not alert
+            }
             console.error("OAuth Error", resp);
             alert(`Google Auth Error: ${resp.error}\n\nIf you see 'secure app' error, it means this sandbox environment is blocked by Google Policy. We will fallback to Local Simulation.`);
-            throw (resp);
+            return;
           }
+          
           accessToken = resp.access_token;
+          // Persist token
+          if (accessToken) {
+              localStorage.setItem(STORAGE_KEY_TOKEN, accessToken);
+          }
           console.log("Access Token Received");
           window.dispatchEvent(new Event('drive-auth-changed'));
         },
         error_callback: (err: any) => {
+           // This callback is for initialization errors, not user actions
            console.error("GIS Initialization Error", err);
-           reject(err);
+           // Don't reject explicitly here as it might break the flow for non-fatal errors, just log.
         }
       });
       gisInited = true;
@@ -86,6 +101,7 @@ export const requestAuth = () => {
   }
   // Request access token.
   try {
+    // Prompt for consent to ensure we get a fresh token if needed
     tokenClient.requestAccessToken({ prompt: 'consent' });
   } catch (e) {
     console.error("Request Auth Failed", e);
@@ -95,9 +111,14 @@ export const requestAuth = () => {
 
 export const signOut = () => {
   if (accessToken) {
-    (window as any).google?.accounts?.oauth2?.revoke(accessToken);
+    // Try to revoke if google object is available
+    try {
+        (window as any).google?.accounts?.oauth2?.revoke(accessToken);
+    } catch(e) { console.warn("Revoke failed", e); }
+
     accessToken = null;
     osRootId = null;
+    localStorage.removeItem(STORAGE_KEY_TOKEN);
     window.dispatchEvent(new Event('drive-auth-changed'));
   }
 };
@@ -132,6 +153,11 @@ export const getOsRootId = async (): Promise<string> => {
     const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id)`;
     
     const res = await fetch(url, { headers: getHeaders() });
+    if (res.status === 401) {
+        // Token likely expired
+        signOut();
+        throw new Error("Auth token expired");
+    }
     const data = await res.json();
 
     if (data.files && data.files.length > 0) {
