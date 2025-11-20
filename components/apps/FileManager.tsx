@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Folder, FileText, Image, ArrowLeft, ChevronRight, Search, Menu, Home, Download, HardDrive, Cloud, RefreshCw, Trash2, ExternalLink } from 'lucide-react';
+import { Folder, FileText, Image, ArrowLeft, ChevronRight, Search, Menu, Home, Download, HardDrive, Cloud, RefreshCw, Trash2, ExternalLink, FolderPlus } from 'lucide-react';
 import * as fs from '../../services/fileSystem';
 
 const FileManagerApp: React.FC = () => {
@@ -65,6 +65,21 @@ const FileManagerApp: React.FC = () => {
       loadDir(currentPathId);
   };
 
+  const handleCreateFolder = async () => {
+      const name = prompt("Enter folder name:", "New Folder");
+      if (!name) return;
+      
+      setLoading(true);
+      try {
+        await fs.createDir(name, currentPathId);
+        await loadDir(currentPathId);
+      } catch (e) {
+        console.error("Failed to create folder", e);
+        alert("Error creating folder");
+      }
+      setLoading(false);
+  };
+
   const handleItemClick = (item: fs.FSItem) => {
       const newSet = new Set(selectedItems);
       if (newSet.has(item.id)) {
@@ -109,6 +124,14 @@ const FileManagerApp: React.FC = () => {
         </div>
 
         <div className="flex gap-2 ml-auto">
+             <button 
+                className="p-2 hover:bg-gray-200 rounded text-gray-600" 
+                onClick={handleCreateFolder}
+                title="New Folder"
+            >
+                <FolderPlus size={18} />
+            </button>
+
             {selectedItems.size === 1 && items.find(i => i.id === Array.from(selectedItems)[0])?.type === 'folder' && (
                  <button 
                     className="p-2 hover:bg-gray-200 rounded text-gray-600" 
@@ -196,6 +219,9 @@ const FileManagerApp: React.FC = () => {
                     <Folder size={64} className="mb-4 opacity-20" />
                     <p>Folder is empty</p>
                     {isRealDrive && <p className="text-xs mt-2">Synced with Google Drive</p>}
+                    <button onClick={handleCreateFolder} className="mt-4 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-md text-sm flex items-center gap-2">
+                        <FolderPlus size={16} /> Create New Folder
+                    </button>
                  </div>
             )}
         </div>
@@ -205,3 +231,4 @@ const FileManagerApp: React.FC = () => {
 };
 
 export default FileManagerApp;
+    

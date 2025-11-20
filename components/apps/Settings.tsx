@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import { Wifi, Bluetooth, Monitor, Info, Search, Lock, Moon, Globe, Check, Cloud, LogOut, Loader2, AlertCircle, Smartphone, Shield, MousePointer, Bell, Power, Network as NetworkIcon, Settings } from 'lucide-react';
-import { isGoogleDriveConnected, syncFromDrive } from '../../services/storageService';
+import { Wifi, Bluetooth, Monitor, Info, Search, Lock, Moon, Globe, Check, Cloud, LogOut, Loader2, AlertCircle, Smartphone, Shield, MousePointer, Bell, Power, Network as NetworkIcon, Settings, Grid } from 'lucide-react';
+import { isGoogleDriveConnected, syncFromDrive, ALL_PACKAGES, isPackageInstalled, installPackage, uninstallPackage } from '../../services/storageService';
+import { APP_CONFIGS } from '../../constants';
 import * as drive from '../../services/googleDrive';
 import * as fs from '../../services/fileSystem';
 import { getEmulator } from '../../services/emulatorService';
@@ -29,11 +30,19 @@ const SettingsApp: React.FC<SettingsProps> = ({ onUpdateWallpaper, currentWallpa
   const [dockSize, setDockSize] = useState(48);
   const [darkMode, setDarkMode] = useState(true);
   const [emuData, setEmuData] = useState<{kernel: string, uptime: string} | null>(null);
+  const [, setTick] = useState(0); // Force re-render on storage updates
 
   // Real Auth State
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  // Listen for storage updates (installs/uninstalls)
+  useEffect(() => {
+      const handleStorageUpdate = () => setTick(t => t + 1);
+      window.addEventListener('storage-update', handleStorageUpdate);
+      return () => window.removeEventListener('storage-update', handleStorageUpdate);
+  }, []);
 
   // Load Auth State
   useEffect(() => {
@@ -338,6 +347,52 @@ const SettingsApp: React.FC<SettingsProps> = ({ onUpdateWallpaper, currentWallpa
                 </div>
              </div>
         );
+    
+      case 'Applications':
+        return (
+            <div className="p-6 animate-in fade-in slide-in-from-bottom-4 duration-300 max-w-4xl mx-auto">
+                <h2 className="text-xl font-bold mb-6 text-gray-800">Applications</h2>
+                <p className="text-gray-500 text-sm mb-6">Manage installed applications and system packages.</p>
+                <div className="space-y-4">
+                    {ALL_PACKAGES.filter(pkg => pkg.appId).map(pkg => {
+                        const isInstalled = isPackageInstalled(pkg.name);
+                        const config = APP_CONFIGS[pkg.appId!];
+                        
+                        return (
+                            <div key={pkg.id} className="bg-white rounded-xl border border-gray-200 p-4 flex items-center justify-between shadow-sm hover:shadow-md transition-shadow">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 shrink-0">
+                                        {config && React.cloneElement(config.icon as React.ReactElement<any>, { size: 24 })}
+                                    </div>
+                                    <div>
+                                        <div className="font-bold text-gray-800">{pkg.name}</div>
+                                        <div className="text-sm text-gray-500 line-clamp-1">{pkg.description}</div>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        if (isInstalled) {
+                                            uninstallPackage(pkg.name);
+                                        } else {
+                                            installPackage(pkg.name);
+                                        }
+                                        // Force update handled by event listener
+                                        window.dispatchEvent(new Event('storage-update'));
+                                    }}
+                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors min-w-[100px] ${
+                                        isInstalled 
+                                        ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200' 
+                                        : 'bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200'
+                                    }`}
+                                >
+                                    {isInstalled ? 'Uninstall' : 'Install'}
+                                </button>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        );
 
       case 'About':
         return (
@@ -397,6 +452,7 @@ const SettingsApp: React.FC<SettingsProps> = ({ onUpdateWallpaper, currentWallpa
     { id: 'Multitasking', icon: <Smartphone size={18} /> },
     { id: 'Privacy', icon: <Lock size={18} /> },
     { id: 'Online Accounts', icon: <Cloud size={18} /> },
+    { id: 'Applications', icon: <Grid size={18} /> },
     { id: 'System', icon: <Power size={18} /> },
     { id: 'About', icon: <Info size={18} /> },
   ];
