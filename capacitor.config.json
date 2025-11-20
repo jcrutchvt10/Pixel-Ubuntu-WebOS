@@ -1,0 +1,19 @@
+{
+  "appId": "com.pixel.ubuntu.webos",
+  "appName": "Ubuntu 24.04 Pixel Edition",
+  "webDir": "build",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "launchAutoHide": true,
+      "backgroundColor": "#000000",
+      "androidSplashResourceName": "splash",
+      "showSpinner": true,
+      "spinnerColor": "#E95420"
+    }
+  }
+}

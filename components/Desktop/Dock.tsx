@@ -35,7 +35,7 @@ const Dock: React.FC<DockProps> = ({ activeAppIds, openApps, onAppClick, onShowG
 
         <div className={`p-2.5 rounded-xl transition-all duration-200 ${isActive ? 'bg-[#FFFFFF15]' : 'hover:bg-[#FFFFFF10]'}`}>
           {/* Clone icon to adjust size for dock */}
-          {React.cloneElement(config.icon as React.ReactElement, { size: 32 })}
+          {React.cloneElement(config.icon as React.ReactElement<any>, { size: 32 })}
         </div>
 
         {/* Application Open Indicator Dot */}

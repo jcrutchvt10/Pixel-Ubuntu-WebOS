@@ -83,7 +83,7 @@ const AppGrid: React.FC<AppGridProps> = ({ isOpen, onClose, onOpenApp }) => {
                     >
                         <div className="w-16 h-16 text-white group-hover:scale-110 transition-transform duration-200 flex items-center justify-center bg-white/5 rounded-2xl p-3 shadow-lg border border-white/10">
                             {/* Clone icon to increase size for grid */}
-                            {React.cloneElement(app.icon as React.ReactElement, { size: 40 })}
+                            {React.cloneElement(app.icon as React.ReactElement<any>, { size: 40 })}
                         </div>
                         <span className="text-white text-sm font-medium text-center line-clamp-2 drop-shadow-md">{app.name}</span>
                     </div>

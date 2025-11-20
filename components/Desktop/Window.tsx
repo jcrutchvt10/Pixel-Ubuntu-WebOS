@@ -118,7 +118,7 @@ const Window: React.FC<WindowProps> = ({ windowState, isOverview, overviewPositi
       {isOverview && (
           <div className="absolute -top-14 left-1/2 -translate-x-1/2 flex flex-col items-center group">
              <div className="p-2 bg-[#1e1e1e] rounded-lg shadow-lg mb-1">
-               {React.cloneElement(appConfig.icon as React.ReactElement, { size: 24 })}
+               {React.cloneElement(appConfig.icon as React.ReactElement<any>, { size: 24 })}
              </div>
              <span className="text-white text-sm font-bold shadow-black text-shadow-sm whitespace-nowrap">{windowState.title}</span>
              <button 

@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { Folder, FileText, Image, ArrowLeft, ChevronRight, Search, Menu, Home, Download, HardDrive, Cloud, RefreshCw, Trash2 } from 'lucide-react';
+import { Folder, FileText, Image, ArrowLeft, ChevronRight, Search, Menu, Home, Download, HardDrive, Cloud, RefreshCw, Trash2, ExternalLink } from 'lucide-react';
 import * as fs from '../../services/fileSystem';
 
 const FileManagerApp: React.FC = () => {
@@ -12,16 +13,25 @@ const FileManagerApp: React.FC = () => {
 
   const loadDir = async (id: string) => {
       setLoading(true);
-      const files = await fs.listDirectory(id);
-      setItems(files);
-      setIsRealDrive(fs.getFSMode() === 'DRIVE');
+      try {
+        const files = await fs.listDirectory(id);
+        setItems(files);
+        setIsRealDrive(fs.getFSMode() === 'DRIVE');
+      } catch (e) {
+          console.error("Failed to load directory", e);
+          setItems([]);
+      }
       setLoading(false);
   };
 
   useEffect(() => {
       loadDir(currentPathId);
       
-      const handleAuthChange = () => loadDir('root');
+      const handleAuthChange = () => {
+          // Reset to root on auth change
+          setPathHistory([{id: 'root', name: 'Home'}]);
+          setCurrentPathId('root');
+      };
       window.addEventListener('drive-auth-changed', handleAuthChange);
       return () => window.removeEventListener('drive-auth-changed', handleAuthChange);
   }, [currentPathId]);
@@ -30,6 +40,7 @@ const FileManagerApp: React.FC = () => {
       if (item.type === 'folder') {
           setPathHistory(prev => [...prev, { id: item.id, name: item.name }]);
           setCurrentPathId(item.id);
+          setSelectedItems(new Set()); // Clear selection on navigate
       }
   };
 
@@ -59,7 +70,7 @@ const FileManagerApp: React.FC = () => {
       if (newSet.has(item.id)) {
           newSet.delete(item.id);
       } else {
-          newSet.clear();
+          newSet.clear(); // Single select mostly
           newSet.add(item.id);
       }
       setSelectedItems(newSet);
@@ -98,6 +109,19 @@ const FileManagerApp: React.FC = () => {
         </div>
 
         <div className="flex gap-2 ml-auto">
+            {selectedItems.size === 1 && items.find(i => i.id === Array.from(selectedItems)[0])?.type === 'folder' && (
+                 <button 
+                    className="p-2 hover:bg-gray-200 rounded text-gray-600" 
+                    onClick={() => {
+                        const item = items.find(i => i.id === Array.from(selectedItems)[0]);
+                        if(item) handleNavigate(item);
+                    }}
+                    title="Open Folder"
+                >
+                    <ExternalLink size={18} />
+                </button>
+            )}
+
             {selectedItems.size > 0 && (
                 <button className="p-2 hover:bg-red-100 text-red-600 rounded transition-colors" onClick={handleDelete}>
                     <Trash2 size={18} />
@@ -115,12 +139,23 @@ const FileManagerApp: React.FC = () => {
              <div className="px-4 py-2 text-xs font-bold text-gray-500">LOCATIONS</div>
              <div 
                 className={`px-4 py-1.5 flex items-center gap-3 cursor-pointer hover:bg-gray-200 ${!isRealDrive ? 'bg-gray-200' : ''}`}
-                onClick={() => alert("Local Home")}
+                onClick={() => {
+                    setPathHistory([{id: 'root', name: 'Home'}]);
+                    setCurrentPathId('root');
+                }}
             >
                 <Home size={18} /> Home
             </div>
             <div 
                 className={`px-4 py-1.5 flex items-center gap-3 cursor-pointer hover:bg-gray-200 ${isRealDrive ? 'text-green-700 font-medium' : ''}`}
+                onClick={() => {
+                    if(isRealDrive) {
+                        setPathHistory([{id: 'root', name: 'Google Drive'}]);
+                        setCurrentPathId('root');
+                    } else {
+                        alert("Connect via Settings app");
+                    }
+                }}
             >
                 <Cloud size={18} /> {isRealDrive ? 'Google Drive' : 'Not Connected'}
             </div>
